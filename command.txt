@@ -1,0 +1,6 @@
+build 
+"D:\UE5\UE_5.0\Engine\Build\BatchFiles\build.bat" CourseShootThemUpEditor Win64 Development "D:\GithubProjects\CourseUnrealEngine\CourseShootThemUp.uproject" -waitmutex -NoHotReaload
+
+
+open Editor
+"D:\UE5\UE_5.0\Engine\Binaries\Win64\UnrealEditor.exe" "D:\GithubProjects\CourseUnrealEngine\CourseShootThemUp.uproject" -log
