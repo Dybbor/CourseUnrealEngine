@@ -21,8 +21,8 @@ public:
     // Sets default values for this actor's properties
     ACSTUBaseWeapon();
     virtual void Fire();
-    void MakeShot();
-
+    void MakeShot();   // Make shot through angles between Muzzle.ForwardVector and VectorMuzzleToImpactPoint
+    void MakeShot1();  // Make shot by moved start point (projected VectorCameraToMuzzle to CameraRotation)
 protected:
     // Called when the game starts or when spawned
     virtual void BeginPlay() override;
@@ -33,8 +33,8 @@ protected:
     FName MuzzleSocketName = "MazzleSocket";
 
     /**
-    * 1 unit = 1 cm, 1500 = 15m
-    */
+     * 1 unit = 1 cm, 1500 = 15m
+     */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons")
     float TraceMaxDistance = 1500.0f;
 };
