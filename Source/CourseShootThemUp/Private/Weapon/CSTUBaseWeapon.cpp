@@ -40,8 +40,6 @@ void ACSTUBaseWeapon::MakeShot() {
     if (HitResult.bBlockingHit) {
         const FVector MuzzleForwardVector = WeaponMesh->GetSocketTransform(MuzzleSocketName).GetRotation().GetForwardVector();
         const FVector FromMuzzleToHitPointNormal = (HitResult.ImpactPoint - GetMuzzleWorldLocation()).GetSafeNormal();
-        DebugLine(FVector::ZeroVector, FromMuzzleToHitPointNormal * 300, FColor::Blue);
-        DebugLine(FVector::ZeroVector, MuzzleForwardVector * 300, FColor::Red);
         /** You can hit enemy behind u.
          * It is bug, so we need to check angle between MeshGun.MuzzleForwardVector and vector direction from muzzle gun & ImpactPoint
          * if it is bigger then 30 degrees (can be changed), shoot not register
@@ -59,9 +57,9 @@ void ACSTUBaseWeapon::MakeShot() {
 }
 
 /**
-* Just another idea how to shoot, dont use in project(only for learning)
-* TraceStart move on projection CameraLocation + CameraRotation * TraceMaxDistance
-*/
+ * Just another idea how to shoot, dont use in project(only for learning)
+ * TraceStart move on projection CameraLocation + CameraRotation * TraceMaxDistance
+ */
 void ACSTUBaseWeapon::MakeShot1() {
 
     if (!GetWorld()) return;
@@ -118,7 +116,6 @@ bool ACSTUBaseWeapon::GetTraceData(FVector& TraceStart, FVector& TraceEnd) const
 }
 
 void ACSTUBaseWeapon::MakeHit(FHitResult& HitResult, const FVector& TraceStart, const FVector& TraceEnd) const {
-
     if (!GetWorld()) return;
     FCollisionQueryParams CollisionParams;
 
@@ -128,11 +125,5 @@ void ACSTUBaseWeapon::MakeHit(FHitResult& HitResult, const FVector& TraceStart, 
 
 bool ACSTUBaseWeapon::CheckAngleHit(const FVector& First, const FVector& Second) const {
     const float Degrees = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(First, Second)));
-    if (Degrees > 90.0f) {
-        UE_LOG(LogBaseWeapon, Error, TEXT("You cant shoot like this. Degrees: %f"), Degrees);
-        return false;
-    } else {
-        UE_LOG(LogBaseWeapon, Display, TEXT("All good. Degrees: %f"), Degrees);
-        return true;
-    }
+    return (Degrees > 90.0f) ? false : true;
 }
