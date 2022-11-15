@@ -24,8 +24,6 @@ public:
     void MakeShot();   // Make shot through angles between Muzzle.ForwardVector and VectorMuzzleToImpactPoint
     void MakeShot1();  // Make shot by moved start point (projected VectorCameraToMuzzle to CameraRotation)
 protected:
-    // Called when the game starts or when spawned
-    virtual void BeginPlay() override;
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
     USkeletalMeshComponent* WeaponMesh;
 
@@ -37,4 +35,12 @@ protected:
      */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons")
     float TraceMaxDistance = 1500.0f;
+    
+    virtual void BeginPlay() override;
+    APlayerController* GetPlayerController() const;
+    bool GetPlayerCameraPoint(FVector& CameraLocation, FRotator& CameraRotation) const;
+    FVector GetMuzzleWorldLocation() const;
+    bool GetTraceData(FVector& TraceStart, FVector& TraceEnd) const;
+    void MakeHit(FHitResult& HitResult, const FVector& TraceStart,const FVector& TraceEnd) const;
+    bool CheckAngleHit(const FVector& First,const FVector& Second) const;
 };

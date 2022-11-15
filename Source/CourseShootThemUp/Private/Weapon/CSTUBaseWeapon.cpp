@@ -5,7 +5,7 @@
 DEFINE_LOG_CATEGORY_STATIC(LogBaseWeapon, All, All)
 #define DebugPrint(text, color) GEngine->AddOnScreenDebugMessage(-1, 5.0f, color, text, true, FVector2D(1.5f, 1.5f));
 #define DebugLine(first, second, color)                                                                                                    \
-    if (GetWorld()) DrawDebugLine(GetWorld(), first, second, color, false, 10.0f, 0, 3);
+    if (GetWorld()) DrawDebugLine(GetWorld(), first, second, color, false, 3.0f, 0, 3);
 
 // Sets default values
 ACSTUBaseWeapon::ACSTUBaseWeapon() {
@@ -29,65 +29,48 @@ void ACSTUBaseWeapon::Fire() {
 void ACSTUBaseWeapon::MakeShot() {
     if (!GetWorld()) return;
 
-    const auto Player = Cast<ACharacter>(GetOwner());
-    if (!Player) return;
+    FVector TraceStart, TraceEnd;
+    if (!GetTraceData(TraceStart, TraceEnd)) return;
 
-    const auto Controller = Player->GetController<APlayerController>();
-    if (!Controller) return;
-
-    FVector CameraLocation;
-    FRotator CameraRotation;
-    /**
-     * GetCamera's ViewPoint
-     */
-    Controller->GetPlayerViewPoint(CameraLocation, CameraRotation);
-
-    const FTransform SocketTransform = WeaponMesh->GetSocketTransform(MuzzleSocketName);
-
-    const FVector TraceStart = CameraLocation;
-    const FVector ShootDirection = CameraRotation.Vector();
-    const FVector TraceEnd = TraceStart + ShootDirection * TraceMaxDistance;
     FHitResult HitResult;
-    FCollisionQueryParams CollisionParams;
-    CollisionParams.AddIgnoredActor(GetOwner());
-    GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParams);
+    MakeHit(HitResult, TraceStart, TraceEnd);
+
+    UE_LOG(LogBaseWeapon, Display, TEXT("Make shot with check angle"));
+
     if (HitResult.bBlockingHit) {
+        const FVector MuzzleForwardVector = WeaponMesh->GetSocketTransform(MuzzleSocketName).GetRotation().GetForwardVector();
+        const FVector FromMuzzleToHitPointNormal = (HitResult.ImpactPoint - GetMuzzleWorldLocation()).GetSafeNormal();
+        DebugLine(FVector::ZeroVector, FromMuzzleToHitPointNormal * 300, FColor::Blue);
+        DebugLine(FVector::ZeroVector, MuzzleForwardVector * 300, FColor::Red);
         /** You can hit enemy behind u.
-         * It is bug, so we need to check angle between MeshGun.ForwardVector and vector derection from muzzle gun & ImpactPoint
+         * It is bug, so we need to check angle between MeshGun.MuzzleForwardVector and vector direction from muzzle gun & ImpactPoint
          * if it is bigger then 30 degrees (can be changed), shoot not register
          **/
-        const FVector ActualTraceEnd = HitResult.ImpactPoint;
-        const FVector HitDirectionFromMuzzle = (ActualTraceEnd - SocketTransform.GetLocation()).GetSafeNormal();
-        const float Degrees = FMath::RadiansToDegrees(
-            FMath::Acos(FVector::DotProduct(SocketTransform.GetRotation().GetForwardVector(), HitDirectionFromMuzzle)));
-        UE_LOG(LogBaseWeapon, Display, TEXT("Degrees %f"), Degrees);
-        if (Degrees > 90.0f) {
-            UE_LOG(LogBaseWeapon, Display, TEXT("You cant shoot like this"));
+        if (CheckAngleHit(MuzzleForwardVector, FromMuzzleToHitPointNormal)) {
+            UE_LOG(LogBaseWeapon, Warning, TEXT("Shoot is succeed (No logic, need to add functionality)"));
+        } else {
+            UE_LOG(LogBaseWeapon, Error, TEXT("Shoot incorrect (No logic, need to add functionality)"));
         }
         DebugLine(TraceStart, TraceEnd, FColor::Orange);
         DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 10.0f, 24, FColor::Red, false, 5.0);
     } else {
-        DrawDebugLine(GetWorld(), SocketTransform.GetLocation(), TraceEnd, FColor::Red, false, 3.0f, 0, 3.0f);
+        DrawDebugLine(GetWorld(), GetMuzzleWorldLocation(), TraceEnd, FColor::Red, false, 3.0f, 0, 3.0f);
     }
-    UE_LOG(LogBaseWeapon, Display, TEXT("Make shot with check angle"));
 }
 
+/**
+* Just another idea how to shoot, dont use in project(only for learning)
+* TraceStart move on projection CameraLocation + CameraRotation * TraceMaxDistance
+*/
 void ACSTUBaseWeapon::MakeShot1() {
 
     if (!GetWorld()) return;
 
-    const auto Player = Cast<ACharacter>(GetOwner());
-    if (!Player) return;
-
-    const auto Controller = Player->GetController<APlayerController>();
-    if (!Controller) return;
-
     FVector CameraLocation;
     FRotator CameraRotation;
-    Controller->GetPlayerViewPoint(CameraLocation, CameraRotation);
+    GetPlayerCameraPoint(CameraLocation, CameraRotation);
 
-    const FVector MuzzleLocation = WeaponMesh->GetSocketTransform(MuzzleSocketName).GetLocation();
-    const FVector VectorCameraToMuzzle = MuzzleLocation - CameraLocation;
+    const FVector VectorCameraToMuzzle = GetMuzzleWorldLocation() - CameraLocation;
     const FVector ProjectedVector = VectorCameraToMuzzle.ProjectOnToNormal(CameraRotation.Vector());
     const FVector TraceStart = CameraLocation + ProjectedVector;
     const FVector TraceEnd = CameraLocation + CameraRotation.Vector() * TraceMaxDistance;
@@ -100,7 +83,56 @@ void ACSTUBaseWeapon::MakeShot1() {
         DrawDebugLine(GetWorld(), CameraLocation, TraceEnd, FColor::Orange, false, 3.0f, 0, 3);
         DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 10, 24, FColor::Red, false, 3.0f);
     } else {
-        DrawDebugLine(GetWorld(), MuzzleLocation, TraceEnd, FColor::Orange, false, 3.0f, 0, 3);
+        DrawDebugLine(GetWorld(), GetMuzzleWorldLocation(), TraceEnd, FColor::Orange, false, 3.0f, 0, 3);
     }
     UE_LOG(LogBaseWeapon, Display, TEXT("Make shot with moved TraceStart"));
+}
+
+APlayerController* ACSTUBaseWeapon::GetPlayerController() const {
+
+    const auto Player = Cast<ACharacter>(GetOwner());
+    if (!Player) return nullptr;
+    return Player->GetController<APlayerController>();
+}
+
+bool ACSTUBaseWeapon::GetPlayerCameraPoint(FVector& CameraLocation, FRotator& CameraRotation) const {
+    const APlayerController* Controller = GetPlayerController();
+    if (!Controller) return false;
+    Controller->GetPlayerViewPoint(CameraLocation, CameraRotation);
+    return true;
+}
+
+FVector ACSTUBaseWeapon::GetMuzzleWorldLocation() const {
+    return WeaponMesh->GetSocketLocation(MuzzleSocketName);
+}
+
+bool ACSTUBaseWeapon::GetTraceData(FVector& TraceStart, FVector& TraceEnd) const {
+    FVector CameraLocation;
+    FRotator CameraRotation;
+    if (!GetPlayerCameraPoint(CameraLocation, CameraRotation)) return false;
+
+    TraceStart = CameraLocation;
+    const FVector ShootDirection = CameraRotation.Vector();
+    TraceEnd = TraceStart + ShootDirection * TraceMaxDistance;
+    return true;
+}
+
+void ACSTUBaseWeapon::MakeHit(FHitResult& HitResult, const FVector& TraceStart, const FVector& TraceEnd) const {
+
+    if (!GetWorld()) return;
+    FCollisionQueryParams CollisionParams;
+
+    CollisionParams.AddIgnoredActor(GetOwner());
+    GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParams);
+}
+
+bool ACSTUBaseWeapon::CheckAngleHit(const FVector& First, const FVector& Second) const {
+    const float Degrees = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(First, Second)));
+    if (Degrees > 90.0f) {
+        UE_LOG(LogBaseWeapon, Error, TEXT("You cant shoot like this. Degrees: %f"), Degrees);
+        return false;
+    } else {
+        UE_LOG(LogBaseWeapon, Display, TEXT("All good. Degrees: %f"), Degrees);
+        return true;
+    }
 }
