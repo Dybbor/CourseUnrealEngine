@@ -116,6 +116,7 @@ void ACSTUBaseCharacter::OnDeath() {
     if (Controller) {
         Controller->ChangeState(NAME_Spectating);
     }
+    GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
 }
 
 void ACSTUBaseCharacter::OnHealthChanged(float Health) {

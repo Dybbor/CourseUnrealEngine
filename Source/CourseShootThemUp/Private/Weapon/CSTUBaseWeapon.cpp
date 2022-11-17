@@ -26,64 +26,8 @@ void ACSTUBaseWeapon::Fire() {
     MakeShot();
 }
 
-void ACSTUBaseWeapon::MakeShot() {
-    if (!GetWorld()) return;
-
-    FVector TraceStart, TraceEnd;
-    if (!GetTraceData(TraceStart, TraceEnd)) return;
-
-    FHitResult HitResult;
-    MakeHit(HitResult, TraceStart, TraceEnd);
-
-    UE_LOG(LogBaseWeapon, Display, TEXT("Make shot with check angle"));
-
-    if (HitResult.bBlockingHit) {
-        const FVector MuzzleForwardVector = WeaponMesh->GetSocketTransform(MuzzleSocketName).GetRotation().GetForwardVector();
-        const FVector FromMuzzleToHitPointNormal = (HitResult.ImpactPoint - GetMuzzleWorldLocation()).GetSafeNormal();
-        /** You can hit enemy behind u.
-         * It is bug, so we need to check angle between MeshGun.MuzzleForwardVector and vector direction from muzzle gun & ImpactPoint
-         * if it is bigger then 30 degrees (can be changed), shoot not register
-         **/
-        if (CheckAngleHit(MuzzleForwardVector, FromMuzzleToHitPointNormal)) {
-            UE_LOG(LogBaseWeapon, Warning, TEXT("Shoot is succeed (No logic, need to add functionality)"));
-        } else {
-            UE_LOG(LogBaseWeapon, Error, TEXT("Shoot incorrect (No logic, need to add functionality)"));
-        }
-        DebugLine(TraceStart, TraceEnd, FColor::Orange);
-        DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 10.0f, 24, FColor::Red, false, 5.0);
-    } else {
-        DrawDebugLine(GetWorld(), GetMuzzleWorldLocation(), TraceEnd, FColor::Red, false, 3.0f, 0, 3.0f);
-    }
-}
-
-/**
- * Just another idea how to shoot, dont use in project(only for learning)
- * TraceStart move on projection CameraLocation + CameraRotation * TraceMaxDistance
- */
-void ACSTUBaseWeapon::MakeShot1() {
-
-    if (!GetWorld()) return;
-
-    FVector CameraLocation;
-    FRotator CameraRotation;
-    GetPlayerCameraPoint(CameraLocation, CameraRotation);
-
-    const FVector VectorCameraToMuzzle = GetMuzzleWorldLocation() - CameraLocation;
-    const FVector ProjectedVector = VectorCameraToMuzzle.ProjectOnToNormal(CameraRotation.Vector());
-    const FVector TraceStart = CameraLocation + ProjectedVector;
-    const FVector TraceEnd = CameraLocation + CameraRotation.Vector() * TraceMaxDistance;
-
-    FHitResult HitResult;
-    FCollisionQueryParams CollisionParams;
-    CollisionParams.AddIgnoredActor(GetOwner());
-    GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParams);
-    if (HitResult.bBlockingHit) {
-        DrawDebugLine(GetWorld(), CameraLocation, TraceEnd, FColor::Orange, false, 3.0f, 0, 3);
-        DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 10, 24, FColor::Red, false, 3.0f);
-    } else {
-        DrawDebugLine(GetWorld(), GetMuzzleWorldLocation(), TraceEnd, FColor::Orange, false, 3.0f, 0, 3);
-    }
-    UE_LOG(LogBaseWeapon, Display, TEXT("Make shot with moved TraceStart"));
+bool ACSTUBaseWeapon::IsEnemy(const ACharacter* Character) const {
+    return (!Character) ? false : Character->GetName().Contains("BaseCharacter");
 }
 
 APlayerController* ACSTUBaseWeapon::GetPlayerController() const {
@@ -126,4 +70,74 @@ void ACSTUBaseWeapon::MakeHit(FHitResult& HitResult, const FVector& TraceStart, 
 bool ACSTUBaseWeapon::CheckAngleHit(const FVector& First, const FVector& Second) const {
     const float Degrees = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(First, Second)));
     return (Degrees > 90.0f) ? false : true;
+}
+
+void ACSTUBaseWeapon::MakeDamage(ACharacter* Enemy) {
+    Enemy->TakeDamage(DamageAmount, FDamageEvent(), GetPlayerController(), this);
+}
+
+void ACSTUBaseWeapon::MakeShot() {
+    if (!GetWorld()) return;
+
+    FVector TraceStart, TraceEnd;
+    if (!GetTraceData(TraceStart, TraceEnd)) return;
+
+    FHitResult HitResult;
+    MakeHit(HitResult, TraceStart, TraceEnd);
+
+    UE_LOG(LogBaseWeapon, Display, TEXT("Make shot with check angle"));
+
+    if (HitResult.bBlockingHit) {
+        const FVector MuzzleForwardVector = WeaponMesh->GetSocketTransform(MuzzleSocketName).GetRotation().GetForwardVector();
+        const FVector FromMuzzleToHitPointNormal = (HitResult.ImpactPoint - GetMuzzleWorldLocation()).GetSafeNormal();
+        /** You can hit enemy behind u.
+         * It is bug, so we need to check angle between MeshGun.MuzzleForwardVector and vector direction from muzzle gun & ImpactPoint
+         * if it is bigger then 30 degrees (can be changed), shoot not register
+         **/
+        if (CheckAngleHit(MuzzleForwardVector, FromMuzzleToHitPointNormal)) {
+            UE_LOG(LogBaseWeapon, Warning, TEXT("Shoot is succeed (No logic, need to add functionality)"));
+            ACharacter* DamagesActor = Cast<ACharacter>(HitResult.GetActor());
+            if (IsEnemy(DamagesActor)) {
+                MakeDamage(DamagesActor);
+            } else {
+                DebugPrint("it is not enemy", FColor::Red);
+            }
+        } else {
+            UE_LOG(LogBaseWeapon, Error, TEXT("Shoot incorrect (No logic, need to add functionality)"));
+        }
+        DebugLine(TraceStart, TraceEnd, FColor::Orange);
+        DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 10.0f, 24, FColor::Red, false, 5.0);
+    } else {
+        DrawDebugLine(GetWorld(), GetMuzzleWorldLocation(), TraceEnd, FColor::Red, false, 3.0f, 0, 3.0f);
+    }
+}
+
+/**
+ * Just another idea how to shoot, dont use in project(only for learning)
+ * TraceStart move on projection CameraLocation + CameraRotation * TraceMaxDistance
+ */
+void ACSTUBaseWeapon::MakeShot1() {
+
+    if (!GetWorld()) return;
+
+    FVector CameraLocation;
+    FRotator CameraRotation;
+    GetPlayerCameraPoint(CameraLocation, CameraRotation);
+
+    const FVector VectorCameraToMuzzle = GetMuzzleWorldLocation() - CameraLocation;
+    const FVector ProjectedVector = VectorCameraToMuzzle.ProjectOnToNormal(CameraRotation.Vector());
+    const FVector TraceStart = CameraLocation + ProjectedVector;
+    const FVector TraceEnd = CameraLocation + CameraRotation.Vector() * TraceMaxDistance;
+
+    FHitResult HitResult;
+    FCollisionQueryParams CollisionParams;
+    CollisionParams.AddIgnoredActor(GetOwner());
+    GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParams);
+    if (HitResult.bBlockingHit) {
+        DrawDebugLine(GetWorld(), CameraLocation, TraceEnd, FColor::Orange, false, 3.0f, 0, 3);
+        DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 10, 24, FColor::Red, false, 3.0f);
+    } else {
+        DrawDebugLine(GetWorld(), GetMuzzleWorldLocation(), TraceEnd, FColor::Orange, false, 3.0f, 0, 3);
+    }
+    UE_LOG(LogBaseWeapon, Display, TEXT("Make shot with moved TraceStart"));
 }

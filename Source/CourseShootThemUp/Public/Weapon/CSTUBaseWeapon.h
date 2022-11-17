@@ -36,11 +36,16 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons")
     float TraceMaxDistance = 1500.0f;
     
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float DamageAmount = 10.0f;
+
     virtual void BeginPlay() override;
     APlayerController* GetPlayerController() const;
     bool GetPlayerCameraPoint(FVector& CameraLocation, FRotator& CameraRotation) const;
     FVector GetMuzzleWorldLocation() const;
     bool GetTraceData(FVector& TraceStart, FVector& TraceEnd) const;
-    void MakeHit(FHitResult& HitResult, const FVector& TraceStart,const FVector& TraceEnd) const;
     bool CheckAngleHit(const FVector& First,const FVector& Second) const;
+    bool IsEnemy(const ACharacter* Character) const;
+    void MakeDamage(ACharacter* Enemy);
+    void MakeHit(FHitResult& HitResult, const FVector& TraceStart, const FVector& TraceEnd) const;
 };

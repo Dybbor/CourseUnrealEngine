@@ -8,6 +8,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/TextRenderComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Animation/AnimMontage.h"
 #include "GameFramework/Controller.h"
 #include "Components/CSTUCharacterMovementComponent.h"
