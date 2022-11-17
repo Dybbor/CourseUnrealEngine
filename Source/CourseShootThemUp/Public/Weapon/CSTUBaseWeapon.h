@@ -45,7 +45,7 @@ protected:
     FVector GetMuzzleWorldLocation() const;
     bool GetTraceData(FVector& TraceStart, FVector& TraceEnd) const;
     bool CheckAngleHit(const FVector& First,const FVector& Second) const;
-    bool IsEnemy(const ACharacter* Character) const;
-    void MakeDamage(ACharacter* Enemy);
+    bool IsEnemy(const AActor* Actor) const;
+    void MakeDamage(AActor* Enemy);
     void MakeHit(FHitResult& HitResult, const FVector& TraceStart, const FVector& TraceEnd) const;
 };

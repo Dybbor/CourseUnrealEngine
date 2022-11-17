@@ -26,10 +26,6 @@ void ACSTUBaseWeapon::Fire() {
     MakeShot();
 }
 
-bool ACSTUBaseWeapon::IsEnemy(const ACharacter* Character) const {
-    return (!Character) ? false : Character->GetName().Contains("BaseCharacter");
-}
-
 APlayerController* ACSTUBaseWeapon::GetPlayerController() const {
 
     const auto Player = Cast<ACharacter>(GetOwner());
@@ -72,7 +68,12 @@ bool ACSTUBaseWeapon::CheckAngleHit(const FVector& First, const FVector& Second)
     return (Degrees > 90.0f) ? false : true;
 }
 
-void ACSTUBaseWeapon::MakeDamage(ACharacter* Enemy) {
+bool ACSTUBaseWeapon::IsEnemy(const AActor* Actor) const {
+    const ACharacter* DamagedActor = Cast<ACharacter>(Actor);
+    return (!DamagedActor) ? false : DamagedActor->GetName().Contains("BaseCharacter");
+}
+
+void ACSTUBaseWeapon::MakeDamage(AActor* Enemy) {
     Enemy->TakeDamage(DamageAmount, FDamageEvent(), GetPlayerController(), this);
 }
 
@@ -96,9 +97,9 @@ void ACSTUBaseWeapon::MakeShot() {
          **/
         if (CheckAngleHit(MuzzleForwardVector, FromMuzzleToHitPointNormal)) {
             UE_LOG(LogBaseWeapon, Warning, TEXT("Shoot is succeed (No logic, need to add functionality)"));
-            ACharacter* DamagesActor = Cast<ACharacter>(HitResult.GetActor());
-            if (IsEnemy(DamagesActor)) {
-                MakeDamage(DamagesActor);
+            const auto DamagedActor = HitResult.GetActor();
+            if (IsEnemy(DamagedActor)) {
+                MakeDamage(DamagedActor);
             } else {
                 DebugPrint("it is not enemy", FColor::Red);
             }
