@@ -23,23 +23,23 @@ public:
     void SetShotDirection(const FVector& Direction) { ShotDirection = Direction; }
 
 protected:
-    UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+    UPROPERTY(VisibleAnywhere, Category = "Projectile")
     USphereComponent* CollisionComponent;
 
-    UPROPERTY(VisibleDefaultsOnly, Category = "Weapon")
+    UPROPERTY(VisibleAnywhere, Category = "Projectile")
     UProjectileMovementComponent* MovementComponent;
     // Called when the game starts or when spawned
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Projectile")
     float DamageRadius = 200.0f;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Projectile")
     float DamageAmount = 50.0f;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Projectile")
     bool DoFullDamage = false;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Projectile")
     float LifeSeconds = 3.0f;
 
     virtual void BeginPlay() override;

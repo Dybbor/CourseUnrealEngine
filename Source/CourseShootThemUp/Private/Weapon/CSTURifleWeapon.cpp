@@ -1,10 +1,9 @@
 // CourseShootThemUp
 
-
 #include "Weapon/CSTURifleWeapon.h"
 
 void ACSTURifleWeapon::StartFire() {
-    UE_LOG(LogRiffleWeapon,Display, TEXT("FIRE!"));
+    UE_LOG(LogRiffleWeapon, Display, TEXT("FIRE!"));
     MakeShot();
     GetWorldTimerManager().SetTimer(ShotTimerHandle, this, &ACSTURifleWeapon::MakeShot, TimeBetweenShots, true);
 }
@@ -23,6 +22,10 @@ bool ACSTURifleWeapon::GetTraceData(FVector& TraceStart, FVector& TraceEnd) cons
     const FVector ShootDirection = FMath::VRandCone(CameraRotation.Vector(), HalfRad);
     TraceEnd = TraceStart + ShootDirection * TraceMaxDistance;
     return true;
+}
+
+void ACSTURifleWeapon::MakeDamage(AActor* Enemy) {
+    Enemy->TakeDamage(DamageAmount, FDamageEvent(), GetPlayerController(), this);
 }
 
 void ACSTURifleWeapon::MakeShot() {
@@ -54,9 +57,39 @@ void ACSTURifleWeapon::MakeShot() {
         } else {
             UE_LOG(LogRiffleWeapon, Error, TEXT("Shoot incorrect (No logic, need to add functionality)"));
         }
-        DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::Orange,false, 3.0f, 0.0f, 3.0f);
+        DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::Orange, false, 3.0f, 0.0f, 3.0f);
         DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 10.0f, 24, FColor::Red, false, 5.0);
     } else {
         DrawDebugLine(GetWorld(), GetMuzzleWorldLocation(), TraceEnd, FColor::Red, false, 3.0f, 0, 3.0f);
     }
+}
+
+/**
+ * Just another idea how to shoot, dont use in project(only for learning)
+ * TraceStart move on projection CameraLocation + CameraRotation * TraceMaxDistance
+ */
+void ACSTURifleWeapon::MakeShot1() {
+
+    if (!GetWorld()) return;
+
+    FVector CameraLocation;
+    FRotator CameraRotation;
+    GetPlayerCameraPoint(CameraLocation, CameraRotation);
+
+    const FVector VectorCameraToMuzzle = GetMuzzleWorldLocation() - CameraLocation;
+    const FVector ProjectedVector = VectorCameraToMuzzle.ProjectOnToNormal(CameraRotation.Vector());
+    const FVector TraceStart = CameraLocation + ProjectedVector;
+    const FVector TraceEnd = CameraLocation + CameraRotation.Vector() * TraceMaxDistance;
+
+    FHitResult HitResult;
+    FCollisionQueryParams CollisionParams;
+    CollisionParams.AddIgnoredActor(GetOwner());
+    GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParams);
+    if (HitResult.bBlockingHit) {
+        DrawDebugLine(GetWorld(), CameraLocation, TraceEnd, FColor::Orange, false, 3.0f, 0, 3);
+        DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, 10, 24, FColor::Red, false, 3.0f);
+    } else {
+        DrawDebugLine(GetWorld(), GetMuzzleWorldLocation(), TraceEnd, FColor::Orange, false, 3.0f, 0, 3);
+    }
+    UE_LOG(LogRiffleWeapon, Display, TEXT("Make shot with moved TraceStart"));
 }

@@ -21,7 +21,7 @@ class COURSESHOOTTHEMUP_API ACSTULauncherWeapon : public ACSTUBaseWeapon
 public:
     virtual void StartFire() override;
 protected:
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapons")
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Launcher weapon")
     TSubclassOf<ACSTUProjectile> ProjectileClass; 
 
     virtual void MakeShot() override;
