@@ -29,7 +29,7 @@ protected:
     USkeletalMeshComponent* WeaponMesh;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapons")
-    FName MuzzleSocketName = "MazzleSocket";
+    FName MuzzleSocketName = "MuzzleSocket";
 
     /**
      * 1 unit = 1 cm, 1500 = 15m

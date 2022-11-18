@@ -2,6 +2,7 @@
 
 #include "Player/CSTUBaseCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Weapon/CSTULauncherWeapon.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogMovement, All, All)
 
