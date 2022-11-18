@@ -22,7 +22,7 @@ public:
     ACSTUBaseWeapon();
     virtual void StartFire();
     virtual void StopFire();
-    void MakeShot();   // Make shot through angles between Muzzle.ForwardVector and VectorMuzzleToImpactPoint
+    virtual void MakeShot();   // Make shot through angles between Muzzle.ForwardVector and VectorMuzzleToImpactPoint
     void MakeShot1();  // Make shot by moved start point (projected VectorCameraToMuzzle to CameraRotation)
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
@@ -40,20 +40,12 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     float DamageAmount = 10.0f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    float TimeBetweenShots = 0.1f;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    float BulletSpread = 1.5f;
-
-private:
-    FTimerHandle ShotTimerHandle;
-
     virtual void BeginPlay() override;
+    virtual bool GetTraceData(FVector& TraceStart, FVector& TraceEnd) const;
+
     APlayerController* GetPlayerController() const;
     bool GetPlayerCameraPoint(FVector& CameraLocation, FRotator& CameraRotation) const;
     FVector GetMuzzleWorldLocation() const;
-    bool GetTraceData(FVector& TraceStart, FVector& TraceEnd) const;
     bool CheckAngleHit(const FVector& First, const FVector& Second) const;
     bool IsEnemy(const AActor* Actor) const;
     void MakeDamage(AActor* Enemy);
