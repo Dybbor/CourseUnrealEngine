@@ -14,30 +14,70 @@ UCSTUWeaponComponent::UCSTUWeaponComponent() {
 // Called when the game starts
 void UCSTUWeaponComponent::BeginPlay() {
     Super::BeginPlay();
-    SpawnWeapon();
+    CurrentWeaponIndex = 0;
+    SpawnWeapons();
+    EquipWeapon(CurrentWeaponIndex);
 }
 
-void UCSTUWeaponComponent::SpawnWeapon() {
-    if (!GetWorld()) return;
-    CurrentWeapon = GetWorld()->SpawnActor<ACSTUBaseWeapon>(WeaponClass);
+void UCSTUWeaponComponent::EndPlay(const EEndPlayReason::Type EndPlayReason) {
+    CurrentWeapon = nullptr;
+    for (auto Weapon : Weapons) {
+        Weapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+        Weapon->Destroy();
+    }
+    Weapons.Empty();
+
+    Super::EndPlay(EndPlayReason);
+}
+
+void UCSTUWeaponComponent::SpawnWeapons() {
+
+    ACharacter* Character = Cast<ACharacter>(GetOwner());
+    if (!Character || !GetWorld()) return;
+    for (auto WeaponClass : WeaponClasses) {
+        auto Weapon = GetWorld()->SpawnActor<ACSTUBaseWeapon>(WeaponClass);
+        if (!Weapon) continue;
+
+        Weapon->SetOwner(Character);
+        Weapons.Add(Weapon);
+
+        AttachWeaponToSocket(Weapon, Character->GetMesh(), WeaponArmorySocketName);
+    }
+    // if weapon spawned, spawn return pointer on weapon. If pointer is null, weapon not spawned
+    if (!CurrentWeapon) return;
+}
+
+void UCSTUWeaponComponent::AttachWeaponToSocket(ACSTUBaseWeapon* Weapon, USceneComponent* SceneComponent, const FName& SocketName) {
+    if (!Weapon || !SceneComponent) return;
+    UE_LOG(BaseWeaponComponent, Display, TEXT("Weapon %s spawned!!!"), *(Weapon->GetName()));
+    FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, false);
+    Weapon->AttachToComponent(SceneComponent, AttachmentRules, SocketName);
+}
+
+void UCSTUWeaponComponent::EquipWeapon(int32 WeaponIndex) {
     ACharacter* Character = Cast<ACharacter>(GetOwner());
     if (!Character) return;
 
-    // if weapon spawned, spawn return pointer on weapon. If pointer is null, weapon not spawned
-    if (!CurrentWeapon) return;
+    if (CurrentWeapon) {
+        CurrentWeapon->StopFire();
+        AttachWeaponToSocket(CurrentWeapon, Character->GetMesh(), WeaponArmorySocketName);
+    }
 
-    UE_LOG(BaseWeaponComponent, Display, TEXT("Weapon spawned!!!"));
-    FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, false);
-    CurrentWeapon->AttachToComponent(Character->GetMesh(), AttachmentRules, WeaponAttachPointName);
-    CurrentWeapon->SetOwner(Character);
+    CurrentWeapon = Weapons[WeaponIndex];
+    AttachWeaponToSocket(CurrentWeapon, Character->GetMesh(), WeaponEquipSocketName);
 }
 
 void UCSTUWeaponComponent::StartFire() {
     if (!CurrentWeapon) return;
-    CurrentWeapon->StartFire(); 
+    CurrentWeapon->StartFire();
 }
 
 void UCSTUWeaponComponent::StopFire() {
     if (!CurrentWeapon) return;
     CurrentWeapon->StopFire();
+}
+
+void UCSTUWeaponComponent::NextWeapon() {
+    CurrentWeaponIndex = (CurrentWeaponIndex + 1) % Weapons.Num();
+    EquipWeapon(CurrentWeaponIndex);
 }

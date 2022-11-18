@@ -12,32 +12,41 @@ DEFINE_LOG_CATEGORY_STATIC(BaseWeaponComponent, All, All)
 
 class ACSTUBaseWeapon;
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class COURSESHOOTTHEMUP_API UCSTUWeaponComponent : public UActorComponent
-{
-	GENERATED_BODY()
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+class COURSESHOOTTHEMUP_API UCSTUWeaponComponent : public UActorComponent {
+    GENERATED_BODY()
 
-public:	
-	// Sets default values for this component's properties
-	UCSTUWeaponComponent();
+public:
+    // Sets default values for this component's properties
+    UCSTUWeaponComponent();
     void StartFire();
     void StopFire();
+    void NextWeapon();
 
 protected:
-	// Called when the game starts
+    // Called when the game starts
     UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-    TSubclassOf<ACSTUBaseWeapon> WeaponClass;
+    TArray<TSubclassOf<ACSTUBaseWeapon>> WeaponClasses;
 
     UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-    FName WeaponAttachPointName = "WeaponPoint";
+    FName WeaponEquipSocketName = "WeaponPoint";
 
-	virtual void BeginPlay() override;
+    UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+    FName WeaponArmorySocketName = "ArmorySocket";
+
+    virtual void BeginPlay() override;
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 private:
     UPROPERTY()
     ACSTUBaseWeapon* CurrentWeapon = nullptr;
 
-    void SpawnWeapon();
+    UPROPERTY()
+    TArray<ACSTUBaseWeapon*> Weapons;
 
-		
+    int32 CurrentWeaponIndex = 0;
+
+    void SpawnWeapons();
+    void AttachWeaponToSocket(ACSTUBaseWeapon* Weapon, USceneComponent* SceneComponent, const FName& SocketName);
+    void EquipWeapon(int32 WeaponIndex);
 };

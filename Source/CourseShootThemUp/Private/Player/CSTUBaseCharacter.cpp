@@ -66,6 +66,7 @@ void ACSTUBaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
     PlayerInputComponent->BindAction("Run", IE_Released, this, &ACSTUBaseCharacter::OnEndRunning);
     PlayerInputComponent->BindAction("Fire", IE_Pressed, WeaponComponent, &UCSTUWeaponComponent::StartFire);
     PlayerInputComponent->BindAction("Fire", IE_Released, WeaponComponent, &UCSTUWeaponComponent::StopFire);
+    PlayerInputComponent->BindAction("NextWeapon", IE_Released, WeaponComponent, &UCSTUWeaponComponent::NextWeapon);
 }
 
 void ACSTUBaseCharacter::MoveForward(float Scale) {
@@ -119,6 +120,7 @@ void ACSTUBaseCharacter::OnDeath() {
         Controller->ChangeState(NAME_Spectating);
     }
     GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
+    WeaponComponent->StopFire();
 }
 
 void ACSTUBaseCharacter::OnHealthChanged(float Health) {
