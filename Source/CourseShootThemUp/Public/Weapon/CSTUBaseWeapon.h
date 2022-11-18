@@ -20,7 +20,8 @@ class COURSESHOOTTHEMUP_API ACSTUBaseWeapon : public AActor {
 public:
     // Sets default values for this actor's properties
     ACSTUBaseWeapon();
-    virtual void Fire();
+    virtual void StartFire();
+    virtual void StopFire();
     void MakeShot();   // Make shot through angles between Muzzle.ForwardVector and VectorMuzzleToImpactPoint
     void MakeShot1();  // Make shot by moved start point (projected VectorCameraToMuzzle to CameraRotation)
 protected:
@@ -35,16 +36,25 @@ protected:
      */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons")
     float TraceMaxDistance = 1500.0f;
-    
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     float DamageAmount = 10.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float TimeBetweenShots = 0.1f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float BulletSpread = 1.5f;
+
+private:
+    FTimerHandle ShotTimerHandle;
 
     virtual void BeginPlay() override;
     APlayerController* GetPlayerController() const;
     bool GetPlayerCameraPoint(FVector& CameraLocation, FRotator& CameraRotation) const;
     FVector GetMuzzleWorldLocation() const;
     bool GetTraceData(FVector& TraceStart, FVector& TraceEnd) const;
-    bool CheckAngleHit(const FVector& First,const FVector& Second) const;
+    bool CheckAngleHit(const FVector& First, const FVector& Second) const;
     bool IsEnemy(const AActor* Actor) const;
     void MakeDamage(AActor* Enemy);
     void MakeHit(FHitResult& HitResult, const FVector& TraceStart, const FVector& TraceEnd) const;

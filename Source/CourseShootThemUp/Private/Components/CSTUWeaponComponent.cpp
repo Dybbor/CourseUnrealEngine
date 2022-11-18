@@ -32,7 +32,12 @@ void UCSTUWeaponComponent::SpawnWeapon() {
     CurrentWeapon->SetOwner(Character);
 }
 
-void UCSTUWeaponComponent::Fire() {
+void UCSTUWeaponComponent::StartFire() {
     if (!CurrentWeapon) return;
-    CurrentWeapon->Fire(); 
+    CurrentWeapon->StartFire(); 
+}
+
+void UCSTUWeaponComponent::StopFire() {
+    if (!CurrentWeapon) return;
+    CurrentWeapon->StopFire();
 }

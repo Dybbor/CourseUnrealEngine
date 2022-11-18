@@ -20,7 +20,8 @@ class COURSESHOOTTHEMUP_API UCSTUWeaponComponent : public UActorComponent
 public:	
 	// Sets default values for this component's properties
 	UCSTUWeaponComponent();
-    void Fire();
+    void StartFire();
+    void StopFire();
 
 protected:
 	// Called when the game starts
