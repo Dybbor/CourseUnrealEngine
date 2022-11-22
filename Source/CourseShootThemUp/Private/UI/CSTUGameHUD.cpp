@@ -3,6 +3,14 @@
 
 #include "UI/CSTUGameHUD.h"
 
+void ACSTUGameHUD::BeginPlay() {
+    Super::BeginPlay();
+    auto PlayerHUDWidget = CreateWidget<UUserWidget>(GetWorld(), PlayerHUDWidgetClass);
+    if (PlayerHUDWidget) {
+        PlayerHUDWidget->AddToViewport();
+    }
+}
+
 void ACSTUGameHUD::DrawHUD() {
     Super::DrawHUD();
     DrawCrosshair();
