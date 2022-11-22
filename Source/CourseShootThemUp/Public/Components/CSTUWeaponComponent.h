@@ -8,11 +8,23 @@
 #include "Animation/AnimMontage.h"
 #include "Weapon/CSTUBaseWeapon.h"
 #include "Animations/CSTUEquipFinishAnimNotify.h"
+#include "Animations/CSTUReloadFinishAnimNotify.h"
 #include "CSTUWeaponComponent.generated.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogWeaponComponent, All, All)
 
 class ACSTUBaseWeapon;
+
+USTRUCT(BlueprintType)
+struct FWeaponData {
+    GENERATED_USTRUCT_BODY()
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
+    TSubclassOf<ACSTUBaseWeapon> WeaponClass;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
+    UAnimMontage* ReloadAnimMontage;
+};
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class COURSESHOOTTHEMUP_API UCSTUWeaponComponent : public UActorComponent {
@@ -24,11 +36,12 @@ public:
     void StartFire();
     void StopFire();
     void NextWeapon();
+    void Reload();
 
 protected:
     // Called when the game starts
     UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-    TArray<TSubclassOf<ACSTUBaseWeapon>> WeaponClasses;
+    TArray<FWeaponData> WeaponData;
 
     UPROPERTY(EditDefaultsOnly, Category = "Weapon")
     FName WeaponEquipSocketName = "WeaponPoint";
@@ -49,8 +62,12 @@ private:
     UPROPERTY()
     TArray<ACSTUBaseWeapon*> Weapons;
 
+    UPROPERTY()
+    UAnimMontage* CurrentReloadAnimMontage = nullptr;
+
     int32 CurrentWeaponIndex = 0;
     bool EquipAnimInProgress = false;
+    bool ReloadAnimInProgress = false;
 
     void SpawnWeapons();
     void AttachWeaponToSocket(ACSTUBaseWeapon* Weapon, USceneComponent* SceneComponent, const FName& SocketName);
@@ -58,6 +75,11 @@ private:
     void PlayAnimMontage(UAnimMontage* Animation);
     void InitAnimation();
     void OnEquipFinished(USkeletalMeshComponent* MeshComponent);
+    void OnReloadFinished(USkeletalMeshComponent* MeshComponent);
     bool CanFire() const;
     bool CanEquip() const;
+    bool CanReload() const;
+
+    template<typename T>
+    T* FindAnimNotifyByClass(UAnimSequenceBase* Animation);
 };

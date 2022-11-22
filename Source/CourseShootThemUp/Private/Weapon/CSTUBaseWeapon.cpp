@@ -19,6 +19,7 @@ ACSTUBaseWeapon::ACSTUBaseWeapon() {
 void ACSTUBaseWeapon::BeginPlay() {
     Super::BeginPlay();
     check(WeaponMesh);
+    CurrentAmmo = DefaultAmmo;
 }
 
 void ACSTUBaseWeapon::StartFire() {}
@@ -70,4 +71,34 @@ void ACSTUBaseWeapon::MakeHit(FHitResult& HitResult, const FVector& TraceStart, 
 
     CollisionParams.AddIgnoredActor(GetOwner());
     GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParams);
+}
+
+void ACSTUBaseWeapon::DecreaseAmmo() {
+    CurrentAmmo.Bullets--;
+    LogAmmo();
+    if (IsClipEmpty() && !IsAmmoEmpty()) {
+        ChangeClip();
+    }
+}
+
+bool ACSTUBaseWeapon::IsAmmoEmpty() const {
+    return !CurrentAmmo.Infinite && CurrentAmmo.Clips == 0 && IsClipEmpty();
+}
+
+bool ACSTUBaseWeapon::IsClipEmpty() const {
+    return CurrentAmmo.Bullets == 0;
+}
+
+void ACSTUBaseWeapon::ChangeClip() {
+    CurrentAmmo.Bullets = DefaultAmmo.Bullets;
+    if (!CurrentAmmo.Infinite) {
+        CurrentAmmo.Clips--;
+        UE_LOG(LogBaseWeapon, Display, TEXT("ChangeClip"));
+    }
+}
+
+void ACSTUBaseWeapon::LogAmmo() const {
+    FString AmmoInfo = "Ammo: " + FString::FromInt(CurrentAmmo.Bullets) + "  ";
+    AmmoInfo += CurrentAmmo.Infinite ? "Infinite" : FString::FromInt(CurrentAmmo.Clips);
+    UE_LOG(LogBaseWeapon, Display, TEXT("%s"),*AmmoInfo);
 }

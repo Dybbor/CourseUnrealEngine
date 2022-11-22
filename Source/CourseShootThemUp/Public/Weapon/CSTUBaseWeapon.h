@@ -13,6 +13,19 @@
 
 class USkeletalMeshComponent;
 
+USTRUCT(BlueprintType)
+struct FAmmoData {
+    GENERATED_USTRUCT_BODY()
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
+    int32 Bullets;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon", meta = (EditCondition = "!Infinite"))
+    int32 Clips;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
+    bool Infinite = false;
+};
+
 UCLASS()
 class COURSESHOOTTHEMUP_API ACSTUBaseWeapon : public AActor {
     GENERATED_BODY()
@@ -30,6 +43,8 @@ protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapons")
     FName MuzzleSocketName = "MuzzleSocket";
 
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapons")
+    FAmmoData DefaultAmmo{15, 10, false};
     /**
      * 1 unit = 1 cm, 1500 = 15m
      */
@@ -46,4 +61,13 @@ protected:
     void MakeHit(FHitResult& HitResult, const FVector& TraceStart, const FVector& TraceEnd) const;
     bool CheckAngleHit(const FVector& First, const FVector& Second) const;
     bool IsEnemy(const AActor* Actor) const;
+
+    void DecreaseAmmo();
+    bool IsAmmoEmpty() const;
+    bool IsClipEmpty() const;
+    void ChangeClip();
+    void LogAmmo() const;
+
+private:
+    FAmmoData CurrentAmmo;
 };

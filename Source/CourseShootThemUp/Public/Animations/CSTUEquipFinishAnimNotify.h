@@ -3,18 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Animation/AnimNotifies/AnimNotify.h"
+#include "Animations/CSTUAnimNotify.h"
 #include "CSTUEquipFinishAnimNotify.generated.h"
 
-/**
- *
- */
-
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnNotifySignature, USkeletalMeshComponent*)
 UCLASS()
-class COURSESHOOTTHEMUP_API UCSTUEquipFinishAnimNotify : public UAnimNotify {
+class COURSESHOOTTHEMUP_API UCSTUEquipFinishAnimNotify : public UCSTUAnimNotify {
     GENERATED_BODY()
-public:
-    FOnNotifySignature OnNotified;
-    virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
 };

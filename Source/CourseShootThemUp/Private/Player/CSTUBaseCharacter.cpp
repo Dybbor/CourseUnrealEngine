@@ -67,6 +67,7 @@ void ACSTUBaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
     PlayerInputComponent->BindAction("Fire", IE_Pressed, WeaponComponent, &UCSTUWeaponComponent::StartFire);
     PlayerInputComponent->BindAction("Fire", IE_Released, WeaponComponent, &UCSTUWeaponComponent::StopFire);
     PlayerInputComponent->BindAction("NextWeapon", IE_Released, WeaponComponent, &UCSTUWeaponComponent::NextWeapon);
+    PlayerInputComponent->BindAction("Reload", IE_Pressed, WeaponComponent, &UCSTUWeaponComponent::Reload);
 }
 
 void ACSTUBaseCharacter::MoveForward(float Scale) {
@@ -135,4 +136,3 @@ void ACSTUBaseCharacter::OnGroundLanded(const FHitResult& Hit) {
     UE_LOG(BaseCharacterLog, Display, TEXT("Final damage: %f"), FinalDamage);
     TakeDamage(FinalDamage, FDamageEvent(), nullptr, nullptr);
 }
-
