@@ -2,6 +2,7 @@
 
 #include "Components/CSTUWeaponComponent.h"
 
+const static int32 WeaponNum = 2;
 // Sets default values for this component's properties
 UCSTUWeaponComponent::UCSTUWeaponComponent() {
     // Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
@@ -14,6 +15,8 @@ UCSTUWeaponComponent::UCSTUWeaponComponent() {
 // Called when the game starts
 void UCSTUWeaponComponent::BeginPlay() {
     Super::BeginPlay();
+
+    checkf(WeaponData.Num() == WeaponNum, TEXT("Our character can hold only %i weapon items"), WeaponNum);
     CurrentWeaponIndex = 0;
     InitAnimation();
     SpawnWeapons();
@@ -107,14 +110,20 @@ void UCSTUWeaponComponent::PlayAnimMontage(UAnimMontage* Animation) {
 }
 
 void UCSTUWeaponComponent::InitAnimation() {
-    auto EquipFinishAnimNotify = FindAnimNotifyByClass<UCSTUEquipFinishAnimNotify>(EquipAnimMonatege);
+    auto EquipFinishAnimNotify = AnimUtils::FindAnimNotifyByClass<UCSTUEquipFinishAnimNotify>(EquipAnimMonatege);
     if (EquipFinishAnimNotify) {
         EquipFinishAnimNotify->OnNotified.AddUObject(this, &UCSTUWeaponComponent::OnEquipFinished);
+    } else {
+        UE_LOG(LogWeaponComponent, Error, TEXT("Equip anim notify is forgotten to set"));
+        checkNoEntry();
     }
     for (auto OneWeaponData : WeaponData) {
-        auto ReloadFinishAnimNotify = FindAnimNotifyByClass<UCSTUReloadFinishAnimNotify>(OneWeaponData.ReloadAnimMontage);
-        if (!ReloadFinishAnimNotify) continue;
-            ReloadFinishAnimNotify->OnNotified.AddUObject(this, &UCSTUWeaponComponent::OnReloadFinished);
+        auto ReloadFinishAnimNotify = AnimUtils::FindAnimNotifyByClass<UCSTUReloadFinishAnimNotify>(OneWeaponData.ReloadAnimMontage);
+        if (!ReloadFinishAnimNotify) {
+            UE_LOG(LogWeaponComponent, Error, TEXT("Reload anim notify is forgotten to set"));
+            checkNoEntry();
+        };
+        ReloadFinishAnimNotify->OnNotified.AddUObject(this, &UCSTUWeaponComponent::OnReloadFinished);
     }
 }
 void UCSTUWeaponComponent::OnEquipFinished(USkeletalMeshComponent* MeshComponent) {
@@ -138,19 +147,10 @@ bool UCSTUWeaponComponent::CanEquip() const {
 }
 
 bool UCSTUWeaponComponent::CanReload() const {
-    return CurrentWeapon && !EquipAnimInProgress && !ReloadAnimInProgress;
-}
-template <typename T>
-T* UCSTUWeaponComponent::FindAnimNotifyByClass(UAnimSequenceBase* Animation) {
-    if (!Animation) return nullptr;
-    const auto NotifyEvents = Animation->Notifies;
-    for (auto NotifyEvent : NotifyEvents) {
-        auto AnimNotify= Cast<T>(NotifyEvent.Notify);
-        if (AnimNotify) {
-            return AnimNotify;
-        }
-    }
-    return nullptr;
+    return CurrentWeapon             //
+           && !EquipAnimInProgress   //
+           && !ReloadAnimInProgress  //
+           && CurrentWeapon->CanReload();
 }
 
 void UCSTUWeaponComponent::OnClipEmpty() {

@@ -9,22 +9,13 @@
 #include "Weapon/CSTUBaseWeapon.h"
 #include "Animations/CSTUEquipFinishAnimNotify.h"
 #include "Animations/CSTUReloadFinishAnimNotify.h"
+#include "Animations/AnimUtils.h"
+#include "CSTUCoreTypes.h"
 #include "CSTUWeaponComponent.generated.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogWeaponComponent, All, All)
 
 class ACSTUBaseWeapon;
-
-USTRUCT(BlueprintType)
-struct FWeaponData {
-    GENERATED_USTRUCT_BODY()
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
-    TSubclassOf<ACSTUBaseWeapon> WeaponClass;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
-    UAnimMontage* ReloadAnimMontage;
-};
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class COURSESHOOTTHEMUP_API UCSTUWeaponComponent : public UActorComponent {
@@ -81,7 +72,4 @@ private:
     bool CanReload() const;
     void OnClipEmpty();
     void ChangeClip();
-
-    template<typename T>
-    T* FindAnimNotifyByClass(UAnimSequenceBase* Animation);
 };

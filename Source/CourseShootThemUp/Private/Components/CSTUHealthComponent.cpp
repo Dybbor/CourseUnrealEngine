@@ -15,7 +15,7 @@ UCSTUHealthComponent::UCSTUHealthComponent() {
 // Called when the game starts
 void UCSTUHealthComponent::BeginPlay() {
     Super::BeginPlay();
-
+    check(MaxHealth);
     SetHealth(MaxHealth);
     AActor* ComponentOwner = GetOwner();
     if (ComponentOwner) {

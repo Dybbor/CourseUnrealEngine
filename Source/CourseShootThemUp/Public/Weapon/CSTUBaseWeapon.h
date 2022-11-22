@@ -9,24 +9,10 @@
 #include "DrawDebugHelpers.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/Controller.h"
+#include "CSTUCoreTypes.h"
 #include "CSTUBaseWeapon.generated.h"
 
 class USkeletalMeshComponent;
-
-DECLARE_MULTICAST_DELEGATE(FOnClipEmptySignature);
-
-USTRUCT(BlueprintType)
-struct FAmmoData {
-    GENERATED_USTRUCT_BODY()
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
-    int32 Bullets;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon", meta = (EditCondition = "!Infinite"))
-    int32 Clips;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
-    bool Infinite = false;
-};
 
 UCLASS()
 class COURSESHOOTTHEMUP_API ACSTUBaseWeapon : public AActor {
