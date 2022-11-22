@@ -39,6 +39,7 @@ void UCSTUWeaponComponent::SpawnWeapons() {
         auto Weapon = GetWorld()->SpawnActor<ACSTUBaseWeapon>(OneWeaponData.WeaponClass);
         if (!Weapon) continue;
 
+        Weapon->OnClipEmpty.AddUObject(this, &UCSTUWeaponComponent::OnClipEmpty);
         Weapon->SetOwner(Character);
         Weapons.Add(Weapon);
 
@@ -96,9 +97,7 @@ void UCSTUWeaponComponent::NextWeapon() {
 }
 
 void UCSTUWeaponComponent::Reload() {
-    if (!CanReload()) return;
-    ReloadAnimInProgress = true;
-    PlayAnimMontage(CurrentReloadAnimMontage);
+    ChangeClip();
 }
 
 void UCSTUWeaponComponent::PlayAnimMontage(UAnimMontage* Animation) {
@@ -152,4 +151,15 @@ T* UCSTUWeaponComponent::FindAnimNotifyByClass(UAnimSequenceBase* Animation) {
         }
     }
     return nullptr;
+}
+
+void UCSTUWeaponComponent::OnClipEmpty() {
+    ChangeClip();
+}
+void UCSTUWeaponComponent::ChangeClip() {
+    if (!CanReload()) return;
+    CurrentWeapon->StopFire();
+    CurrentWeapon->ChangeClip();
+    ReloadAnimInProgress = true;
+    PlayAnimMontage(CurrentReloadAnimMontage);
 }

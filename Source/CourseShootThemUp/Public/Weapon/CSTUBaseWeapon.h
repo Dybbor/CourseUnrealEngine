@@ -13,6 +13,8 @@
 
 class USkeletalMeshComponent;
 
+DECLARE_MULTICAST_DELEGATE(FOnClipEmptySignature);
+
 USTRUCT(BlueprintType)
 struct FAmmoData {
     GENERATED_USTRUCT_BODY()
@@ -31,10 +33,13 @@ class COURSESHOOTTHEMUP_API ACSTUBaseWeapon : public AActor {
     GENERATED_BODY()
 
 public:
+    FOnClipEmptySignature OnClipEmpty;
     // Sets default values for this actor's properties
     ACSTUBaseWeapon();
     virtual void StartFire();
     virtual void StopFire();
+    void ChangeClip();
+    bool CanReload() const;
 
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
@@ -65,7 +70,6 @@ protected:
     void DecreaseAmmo();
     bool IsAmmoEmpty() const;
     bool IsClipEmpty() const;
-    void ChangeClip();
     void LogAmmo() const;
 
 private:

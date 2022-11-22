@@ -74,10 +74,14 @@ void ACSTUBaseWeapon::MakeHit(FHitResult& HitResult, const FVector& TraceStart, 
 }
 
 void ACSTUBaseWeapon::DecreaseAmmo() {
+    if (CurrentAmmo.Bullets == 0) {
+        UE_LOG(LogBaseWeapon, Warning, TEXT("Clip is empty"));
+    }
     CurrentAmmo.Bullets--;
     LogAmmo();
     if (IsClipEmpty() && !IsAmmoEmpty()) {
-        ChangeClip();
+        StopFire();
+        OnClipEmpty.Broadcast();
     }
 }
 
@@ -90,15 +94,22 @@ bool ACSTUBaseWeapon::IsClipEmpty() const {
 }
 
 void ACSTUBaseWeapon::ChangeClip() {
-    CurrentAmmo.Bullets = DefaultAmmo.Bullets;
     if (!CurrentAmmo.Infinite) {
+        if (CurrentAmmo.Clips == 0) {
+            UE_LOG(LogBaseWeapon, Warning, TEXT("No more clips"));
+        }
         CurrentAmmo.Clips--;
         UE_LOG(LogBaseWeapon, Display, TEXT("ChangeClip"));
     }
+    CurrentAmmo.Bullets = DefaultAmmo.Bullets;
 }
 
 void ACSTUBaseWeapon::LogAmmo() const {
     FString AmmoInfo = "Ammo: " + FString::FromInt(CurrentAmmo.Bullets) + "  ";
     AmmoInfo += CurrentAmmo.Infinite ? "Infinite" : FString::FromInt(CurrentAmmo.Clips);
     UE_LOG(LogBaseWeapon, Display, TEXT("%s"),*AmmoInfo);
+}
+
+bool ACSTUBaseWeapon::CanReload() const {
+    return CurrentAmmo.Bullets < DefaultAmmo.Bullets && CurrentAmmo.Clips > 0;
 }

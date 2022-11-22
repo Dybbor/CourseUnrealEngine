@@ -4,8 +4,8 @@
 
 void ACSTURifleWeapon::StartFire() {
     UE_LOG(LogRiffleWeapon, Display, TEXT("FIRE!"));
-    MakeShot();
     GetWorldTimerManager().SetTimer(ShotTimerHandle, this, &ACSTURifleWeapon::MakeShot, TimeBetweenShots, true);
+    MakeShot();
 }
 
 void ACSTURifleWeapon::StopFire() {
