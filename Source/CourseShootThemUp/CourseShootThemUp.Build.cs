@@ -17,6 +17,7 @@ public class CourseShootThemUp : ModuleRules
             "CourseShootThemUp/Public/Components",
             "CourseShootThemUp/Public/DevelopmentContent",
             "CourseShootThemUp/Public/Weapon",
+            "CourseShootThemUp/Public/Animations",
             "CourseShootThemUp/Public/UI"});
         // Uncomment if you are using Slate UI
         // PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });

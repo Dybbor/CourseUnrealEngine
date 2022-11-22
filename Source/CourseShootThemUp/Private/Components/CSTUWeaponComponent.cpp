@@ -15,6 +15,7 @@ UCSTUWeaponComponent::UCSTUWeaponComponent() {
 void UCSTUWeaponComponent::BeginPlay() {
     Super::BeginPlay();
     CurrentWeaponIndex = 0;
+    InitAnimation();
     SpawnWeapons();
     EquipWeapon(CurrentWeaponIndex);
 }
@@ -49,7 +50,6 @@ void UCSTUWeaponComponent::SpawnWeapons() {
 
 void UCSTUWeaponComponent::AttachWeaponToSocket(ACSTUBaseWeapon* Weapon, USceneComponent* SceneComponent, const FName& SocketName) {
     if (!Weapon || !SceneComponent) return;
-    UE_LOG(BaseWeaponComponent, Display, TEXT("Weapon %s spawned!!!"), *(Weapon->GetName()));
     FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, false);
     Weapon->AttachToComponent(SceneComponent, AttachmentRules, SocketName);
 }
@@ -65,19 +65,53 @@ void UCSTUWeaponComponent::EquipWeapon(int32 WeaponIndex) {
 
     CurrentWeapon = Weapons[WeaponIndex];
     AttachWeaponToSocket(CurrentWeapon, Character->GetMesh(), WeaponEquipSocketName);
+    EquipAnimInProgress = true;
+    PlayAnimMontage(EquipAnimMonatege);
 }
 
 void UCSTUWeaponComponent::StartFire() {
-    if (!CurrentWeapon) return;
+    if (!CanFire()) return;
     CurrentWeapon->StartFire();
 }
 
 void UCSTUWeaponComponent::StopFire() {
-    if (!CurrentWeapon) return;
+    if (!CanFire()) return;
     CurrentWeapon->StopFire();
 }
 
 void UCSTUWeaponComponent::NextWeapon() {
+    if (!CanEquip()) return;
     CurrentWeaponIndex = (CurrentWeaponIndex + 1) % Weapons.Num();
     EquipWeapon(CurrentWeaponIndex);
+}
+
+void UCSTUWeaponComponent::PlayAnimMontage(UAnimMontage* Animation) {
+    ACharacter* Character = Cast<ACharacter>(GetOwner());
+    if (!Character) return;
+    Character->PlayAnimMontage(Animation);
+}
+
+void UCSTUWeaponComponent::InitAnimation() {
+    if (!EquipAnimMonatege) return;
+    const auto NotifyEvents = EquipAnimMonatege->Notifies;
+    for (auto NotifyEvent : NotifyEvents) {
+        auto EquipFinishNotify = Cast<UCSTUEquipFinishAnimNotify>(NotifyEvent.Notify);
+        if (EquipFinishNotify) {
+            EquipFinishNotify->OnNotified.AddUObject(this, &UCSTUWeaponComponent::OnEquipFinished);
+            break;
+        }
+    }
+}
+void UCSTUWeaponComponent::OnEquipFinished(USkeletalMeshComponent* MeshComponent) {
+    ACharacter* Character = Cast<ACharacter>(GetOwner());
+    if (!Character || MeshComponent != Character->GetMesh()) return;
+    EquipAnimInProgress = false;
+}
+
+bool UCSTUWeaponComponent::CanFire() const {
+    return CurrentWeapon && !EquipAnimInProgress;
+}
+
+bool UCSTUWeaponComponent::CanEquip() const {
+    return !EquipAnimInProgress;
 }
